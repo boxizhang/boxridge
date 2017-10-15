@@ -1,10 +1,8 @@
-#' visualize airport delays
 #' @name visulaze_airport_delays
 #' @title visulaze_airport_delays
 #' @description visulaze_airport_delays
 #' @return a plot
-#' @export
-#'
+#' @export visualize_airport_delays
 
 
 library(nycflights13)

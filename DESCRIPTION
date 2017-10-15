@@ -6,7 +6,8 @@ Depends: R (>= 3.2.0)
 Author: person("Boxi", "Zhang", role = c("aut","cre"),email = "bossyzhang@gmail.com")
 Maintainer: Boxi Zhang <bossyzhang@gmail.com>
 Description: A linear regression package in R and visulaze airport delay data
-Suggests: testthat, knitr, rmarkdown,nycflights13,dplyr,ggplot2,ggmap,rworldmap
+Import: dplyr
+Suggests: testthat, knitr, rmarkdown,nycflights13,ggplot2,ggmap,rworldmap
 License: GPL
 Encoding: UTF-8
 LazyData: true

@@ -9,6 +9,3 @@ a plot
 \description{
 visulaze_airport_delays
 }
-\details{
-visualize airport delays
-}
