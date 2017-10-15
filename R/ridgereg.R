@@ -36,6 +36,14 @@ initialize= function(formula,data,lambda,normalise = TRUE){
     ybar_ridge_QR<<- (x_norm %*% beta_ridge_QR)
 
 },
+results = function(){
+  results <- list()
+
+  results$coef <- beta_ridge_QR
+  results$fitted <- ybar_ridge_QR
+  return(results)
+
+},
 
 print_QR= function(){
 
@@ -50,9 +58,17 @@ print_QR= function(){
 
 },
 
-predict_QR =function(){
-    cat("\n \n Predicted values or fitted values using QR decomposition:","\n\n")
-    return(as.vector(round(ybar_ridge_QR, 2)))
+predict_QR = function(newdata=NULL){ #if newdata is used, it should be a data frame
+  "Prints out the predicted values or if newdata is used, prints out predicted values for the new data set"
+
+  if(is.null(newdata)){
+    result <- structure(c(results()[[2]]), names=(1:length(results()[[2]])))
+  } else{
+    X<-model.matrix(object=formula, data=newdata)
+    X[,2:ncol(X)] <- scale(X[,-1])
+    result <- (X %*% results()[[1]])[,1]
+  }
+  return(result)
 },
 
 coef_QR = function(){

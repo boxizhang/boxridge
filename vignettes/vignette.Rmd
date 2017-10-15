@@ -1,0 +1,169 @@
+---
+title: "Untitled"
+author: "Priya Kurian pullolickal"
+date: "October 15, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+```
+```{r}
+library(mlbench)
+library(caret)
+library(leaps)
+library(ggplot2)
+library(lattice)
+data("BostonHousing")
+```
+
+**Divide the BostonHousing data (or your own API data) into a test and training dataset using the caret package.**
+
+Dividing the BostonHousing data into 70% training and 30% test data
+```{r, warning=FALSE}
+
+data("BostonHousing")
+names(BostonHousing)
+train_data <- caret::createDataPartition(BostonHousing$age, p = .7,
+                                         list = FALSE,
+                                         times= 1)
+Trainingdata <- BostonHousing[train_data, ]
+Testdata <- BostonHousing[-train_data, ]
+
+
+nrow(Trainingdata)
+nrow(Testdata)
+
+#For the 20-fold cross-validation
+ctr <- caret::trainControl(method = "repeatedcv",
+  number = 20, # k=20
+  repeats = 20) # repeat 10 times
+```
+
+
+
+###1. Fit a linear regression model on the Trainingdata dataset.
+
+The first two arguments of the train function are predictor and outcome data objects.Traincontrol object in train allows us to specify the resampling method.The resampling method used here is cv-cross validation. 
+For our analysis we have taken crim variable . R-squared and RMSE(Root Mean Square Error)is used measure model performance. RSME values is low .
+
+```{r}
+lm <- caret::train(indus~.,
+                      data = Trainingdata,
+                      method='lm',
+                      trControl = trainControl(method = "cv")
+)
+
+print(lm)
+```
+
+
+
+###2. Fit a linear regression model and with a linear regression model with forward selection of covariates. Fitting a linear model with method = leapForward on the Trainingdata dataset.
+
+```{r}
+lflmGrid <- expand.grid(nvmax=1:(ncol(Trainingdata)-1))
+lflm <- caret::train(indus~.,
+                      data = Trainingdata,
+                      method='leapForward',
+                      tuneGrid = lflmGrid,
+                      trControl = trainControl(method = "cv")
+)
+print(lflm)
+```
+
+###3. Evaluate the performance of this model on the Trainingdata dataset.
+
+since we have got a low RMSE,we think that our model has good perfomance with 8(number of predictors).
+
+```{r, fig.height= 7, fig.width= 7 }
+p_data <- as.data.frame(cbind(predict(lflm), scale(resid(lflm))))
+
+plot <- ggplot(p_data, aes(x = p_data[,1], y = p_data[,2])) + geom_point() +
+          geom_smooth(method = "loess", color = "red") + xlab("Fitted") +
+          ylab("Residuals") + ggtitle("Resid vs Fitted with 9 factors") +
+          theme(plot.title = element_text(hjust = 0.5))
+
+plot(plot)
+```
+
+
+###4~5. Fit a ridge regression model using ridgereg() function in boxridge package and finding a best parameter lambda using 10-fold cross-validation on the Trainingdata set.
+
+```{r, warning=FALSE}
+#To use rigdereg() function
+ridge <- list(type=c("Classification", "Regression"),
+            library="boxridge",
+            loop=NULL,
+            prob=NULL)
+
+#Parameter setting
+ridge$label<-"Ridge regression"
+
+ridge$parameters <- data.frame(parameter = "lambda",
+                  class = "numeric",
+                  label = "lambda")
+
+ridge$fit <- function(x, y, lambda, param, lev, last, classProbs, ...) { 
+  dat <- as.data.frame(x)
+  
+  respvector <- NULL
+  respname <- NULL
+  respnum <- NULL
+
+  for(i in 1:ncol(x)){
+    if(identical(y,dat[,i])){
+    respvector <- dat[,i]
+    respname <- names(x)[i]
+    respnum <- i
+    }
+  }
+
+  formula <- paste(respname,"~", sep="")
+
+  if(ncol(x) > 1){
+    for(i in 1:ncol(x)-1){
+            formula <- paste(formula, "+", names(dat)[i], sep="")
+    }
+  }
+
+  formula <- as.formula(formula)
+  
+  ridgereg$new(formula = formula, data=dat,lambda= param$lambda)
+ }
+ 
+  ridge$predict <- function(modelFit, newdata, preProc=NULL, submodels = NULL){
+  if (!is.data.frame(newdata)) 
+    newdata <- as.data.frame(newdata)
+  modelFit$predict(newdata)
+}
+
+ridge$sort  <- function(x) x[order(-x$lambda),]
+
+
+ridge$grid <- function(x, y, len=NULL, search="grid"){
+  data.frame(lambda=seq(from=0, to=10, by=1))
+}
+
+set.seed(12345)
+ridge_fit <- caret::train(x = Trainingdata,
+                  y = Trainingdata$indus,
+                  method = ridge,
+                  trControl = ctr)
+
+ridge_fit
+```
+
+###6. Evaluate the performance of all three models
+```{r, warning=FALSE}
+#Linear regression
+lm$results[,]
+
+#Regression with forward selection
+lflm$results[7,]
+
+#Ridge regression
+ridge_fit$results[1,]
+```
+
+
