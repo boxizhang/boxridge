@@ -11,4 +11,4 @@ Suggests: testthat, knitr, rmarkdown,nycflights13,ggplot2,ggmap,rworldmap
 License: GPL
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.0.2
